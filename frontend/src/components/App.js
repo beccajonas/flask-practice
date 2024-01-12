@@ -6,7 +6,6 @@ import FoodList from "./FoodList";
 import Login from "./Login";
 import UserDetails from "./UserDetails";
 
-
 function App() {
     const [user, setUser] = useState(null);
     const [foods, setFoods] = useState([]);
@@ -18,21 +17,30 @@ function App() {
         Initial Fetches
     ************************/
     useEffect(() => {
-        fetch(`/ducks`)
-            .then((res) => res.json())
-            .then((data) => {
-                setDucks(data);
-                setFeaturedDuck(data[0]);
-            });
         fetch(`/check_session`).then((res) => {
             if (res.ok) {
                 res.json().then((user) => setUser(user));
             }
         });
-        fetch(`/foods`)
-            .then((res) => res.json())
-            .then((data) => setFoods(data));
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            fetch(`/user/${user.id}/ducks`)
+                .then((res) => res.json())
+                .then((data) => {
+                    if(data.length > 0){
+                        setFeaturedDuck(data[0]);
+                        setDucks(data);
+                    }
+                    
+                    
+                });
+            fetch(`/foods`)
+                .then((res) => res.json())
+                .then((data) => setFoods(data));
+        }
+    }, [user]);
     /**********************
         Authentication
     ************************/
@@ -125,7 +133,6 @@ function App() {
             );
     }
 
-
     return (
         <div className="App">
             <h1>Duck Manager</h1>
@@ -137,9 +144,7 @@ function App() {
                         handleClickDuck={handleClickDuck}
                         handleDelete={handleDelete}
                     />
-                    <DuckDisplay
-                        featuredDuck={featuredDuck}
-                    />
+                    <DuckDisplay featuredDuck={featuredDuck} />
                     <FoodList foods={foods} feedDuck={feedDuck} user={user} />
                     <button onClick={() => handleClickForm()}>
                         {duckFormOpen ? "Close" : "Open"} Duck Form

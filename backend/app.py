@@ -32,18 +32,15 @@ def check_session():
     user = db.session.get(User, session.get('user_id'))
     print(f'check session {session.get("user_id")}')
     if user:
-        return user.to_dict(), 200
+        return user.to_dict(rules=['-password_hash']), 200
     else:
         return {"message": "No user logged in"}, 401
 
 @app.delete('/logout')
 def logout():
-    try:
-        session.pop('user_id')
-        return { "message": "Logged out"}, 200
-    except Exception as e:
-        print(e)
-        return { "error": "not found"}, 404
+    session.pop('user_id')
+    return { "message": "Logged out"}, 200
+
 
 
 @app.post('/login')
@@ -59,13 +56,20 @@ def login():
     else:
         return { "error": "Invalid username or password" }, 401
     
-    
+
 @app.get("/ducks/")
 def get_ducks():
     # list of duck python objects
     ducks = Duck.query.all()
     # [duck1.to_dict(), duck2.to_dict(),duck3.to_dict()]
     return [d.to_dict() for d in ducks], 200
+
+@app.get('/user/<int:id>/ducks')
+def get_ducks_for_user(id):
+    user = db.session.get(User, id)
+    if not user:
+        return {"error":"user not found"}, 404
+    return [d.to_dict() for d in user.ducks], 200
 
 @app.get("/foods")
 def get_foods():
@@ -75,7 +79,7 @@ def get_foods():
 @app.get('/users/<int:id>')
 def get_user_by_id(id):
     user = db.session.get(User, id)
-    return user.to_dict(rules=['-ducks'])
+    return user.to_dict(rules=['-ducks']), 200
 @app.patch('/users/<int:id>')
 def patch_user(id):
     user = db.session.get(User, id)
